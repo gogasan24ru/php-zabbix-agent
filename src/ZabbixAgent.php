@@ -6,6 +6,18 @@
 class ZabbixAgent
 {
     /**
+     * Hostname of Zabbix server for active checks.
+     * @var string
+     */
+    protected $serverActive="127.0.0.1";
+
+    /**
+     * Port number of Zabbix server for active checks.
+     * @var int
+     */
+    protected $serverActivePort=10051;
+
+    /**
      * Items on this agent
      * @var array
      */
@@ -16,6 +28,21 @@ class ZabbixAgent
      * @var resource
      */
     protected $listenSocket;
+
+    /**
+     * Hostname for active checks and must match hostname as configured on the server.
+     * @var string
+     */
+    protected $agentHostName;
+
+    /**
+     * Host metadata is used at host auto-registration process.
+     * @var string
+     */
+    protected $agenthostMetadata;
+
+    //TODO: add items?
+    //TODO: native tls required
 
     /**
      * Default port for zabbix agent
@@ -54,6 +81,7 @@ class ZabbixAgent
      * @param int $port
      * @param string $host
      * @return \ZabbixAgent
+     * @throws ZabbixAgentException
      */
     public static function create($port, $host = "0.0.0.0")
     {
