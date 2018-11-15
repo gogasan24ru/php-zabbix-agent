@@ -6,18 +6,6 @@
 class ZabbixAgent
 {
     /**
-     * Hostname of Zabbix server for active checks.
-     * @var string
-     */
-    protected $serverActive="127.0.0.1";
-
-    /**
-     * Port number of Zabbix server for active checks.
-     * @var int
-     */
-    protected $serverActivePort=10051;
-
-    /**
      * Items on this agent
      * @var array
      */
@@ -39,7 +27,19 @@ class ZabbixAgent
      * Host metadata is used at host auto-registration process.
      * @var string
      */
-    protected $agenthostMetadata;
+    protected $agentHostMetadata;
+
+    /**
+     * Hostname of Zabbix server for active checks.
+     * @var string
+     */
+    protected $serverActive;
+
+    /**
+     * Port number of Zabbix server for active checks.
+     * @var int
+     */
+    protected $serverActivePort;
 
     //TODO: add items?
     //TODO: native tls required
@@ -77,10 +77,43 @@ class ZabbixAgent
     }
 
     /**
+     * Setup parameters, required for active mode.
+     * @param string $serverActive
+     * @param int $port
+     * @param string $agentHostName
+     * @param string $agentHostMetadata
+     */
+    public function setupActive($serverActive,
+                                       $port=10051,
+                                       $agentHostName=null,
+                                       $agentHostMetadata=null)
+    {
+        $this->serverActive=$serverActive;
+        $this->port=$port;
+        if(isset($agentHostName))
+        {
+            $this->agentHostName=$agentHostName;
+        }
+        else
+            if (gethostname()) {
+                $this->agentHostName=gethostname().'-php-zabbix-agent';
+            }
+            else {
+                $this->agentHostName='php-zabbix-agent';
+            }
+
+            if(!isset($agentHostMetadata)){
+                $this->agentHostMetadata = "";// should add some phpinfo info?
+            }
+
+
+    }
+
+    /**
      * Create zabbix agent object
      * @param int $port
      * @param string $host
-     * @return \ZabbixAgent
+     * @return ZabbixAgent
      * @throws ZabbixAgentException
      */
     public static function create($port, $host = "0.0.0.0")
@@ -90,11 +123,16 @@ class ZabbixAgent
 
     /**
      * Start listen socket.
+     * @param bool $active - true for active mode
      * @throws ZabbixAgentSocketException
      * @return ZabbixAgent
      */
-    public function start()
+    public function start($active=false)
     {
+        if($active){
+            //TODO run in active mode
+            return;
+        }
         $this->listenSocket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         if ($this->listenSocket === false) {
             throw new ZabbixAgentSocketException('Create socket error.');
