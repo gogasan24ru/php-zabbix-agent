@@ -1,6 +1,13 @@
 <?php
 
-include("vendor/autoload.php");
+//include("vendor/autoload.php");
+
+
+foreach (glob("src/*.php") as $filename)
+{
+    include $filename;
+}
+
 
 $agent = ZabbixAgent::create(10051);
 
