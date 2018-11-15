@@ -1,0 +1,10 @@
+language: php
+php:
+  - '5.6'
+  - '7.0'
+  - '7.1'
+before_script: composer update
+script: vendor/bin/phpunit --coverage-clover=coverage.xml --whitelist src/ test/*Test.php
+
+after_success:
+    - bash <(curl -s https://codecov.io/bash)
