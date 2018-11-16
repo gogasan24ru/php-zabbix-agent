@@ -70,9 +70,10 @@ while (true) {
 }
 ```
 [Advanced example](https://github.com/gogasan24ru/php-zabbix-agent/blob/master/example.php)
+
 [Zabbix example template](https://github.com/gogasan24ru/php-zabbix-agent/blob/master/zbx_export_templates.xml)
 
-## 6. Main classes
+## 5. Main classes
 
  * `ZabbixPrimitiveItem` - holds primitive values like int, string, float. Return `var_export()`'ed string for object or array
  * `ZabbixTimeDuration` - holds duration from moment in past to current time.
