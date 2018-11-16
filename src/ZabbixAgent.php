@@ -62,12 +62,27 @@ class ZabbixAgent
      * Last active configuration update timestamp.
      * @var int
      */
-    protected $serverActiveUpdateLast;
+    protected $serverActiveUpdateLast=0;
+
+    /**
+     * @var int active send interval
+     */
+    protected $activeSendInterval=180;
+
+    /**
+     * @var int last active send timestamp
+     */
+    protected $activeSendLast=0;
 
     /**
      * @var array - current active configuration
      */
     protected $serverActiveConfiguration;
+
+    /**
+     * @var array - active checks stored results
+     */
+    protected $activeChecksResultsBuffer;
 
     //TODO: add items?
     //TODO: native tls required
@@ -311,7 +326,53 @@ class ZabbixAgent
      */
     private function processActiveChecks()
     {
+        $processed=0;
+        $failed=0;
+        $currentTime=time();
+        if(!isset($this->activeChecksResultsBuffer)) {
+            $this->activeChecksResultsBuffer = array();
+            $this->activeChecksResultsBuffer['data'] = array();
+        }
+        $this->activeChecksResultsBuffer['request']="agent data";
+        $key=count($this->activeChecksResultsBuffer['data']);
+        foreach ($this->serverActiveConfiguration as $checkKey => $check)
+        {
+            //var_dump($check);
+            if(!isset($this->serverActiveConfiguration[$checkKey]['lastRun']))
+                $this->serverActiveConfiguration[$checkKey]['lastRun']=0;
+                //$check['lastRun']=0;
+            if(($currentTime-$this->serverActiveConfiguration[$checkKey]['lastRun'])>
+                $this->serverActiveConfiguration[$checkKey]['delay']){
+                $this->logger(PHPZA_LL_DEBUG,__FUNCTION__." processing: ".$check['key']);
+                try{
+                    $this->activeChecksResultsBuffer['data'][$key]['value']=$this->getItem($check['key'])->toValue();
+                    $processed++;
+                }catch (ZabbixNotSupportedItem $e){
+                    //unset($check['value']);//=$e->getMessage();
+                    $failed++;
+                }
+                catch (Exception $e)
+                {
+                    throw $e; //unregistered exception type TODO: walkaround
+                }
+                $check['lastRun']=$currentTime;
+                $this->serverActiveConfiguration[$checkKey]['lastRun']=$currentTime;
 
+                $this->activeChecksResultsBuffer['data'][$key]['key']=$check['key'];
+                $this->activeChecksResultsBuffer['data'][$key]['clock']=time();
+                $this->activeChecksResultsBuffer['data'][$key]['ns']=$this->nanosec();
+                $this->activeChecksResultsBuffer['data'][$key]['host']=$this->agentHostName;
+
+                $key++;
+            }
+        }
+        $this->activeChecksResultsBuffer['clock']=time();
+        $this->activeChecksResultsBuffer['ns']=$this->nanosec();
+        $this->logger(PHPZA_LL_INFO,
+            __FUNCTION__.
+            " done, processed:".$processed.
+            ", failed:".$failed.
+            ", buffer count:".count($this->activeChecksResultsBuffer['data']));
     }
 
     /**
@@ -324,7 +385,6 @@ class ZabbixAgent
         if(($currentTime-$this->serverActiveUpdateLast)>$this->serverActiveUpdateInterval)
         {
             $ans='';
-            //TODO run in active mode
             $fp = fsockopen($this->serverActive, $this->serverActivePort, $errno, $errstr, 30);
             if (!$fp) {
                 throw new ZabbixActiveAgentException($errstr ($errno));
@@ -423,6 +483,8 @@ class ZabbixAgent
         {
             $this->checkForActiveChecksUpdates();
             $this->processActiveChecks();
+            $this->sendActiveChecksResults();
+            //TODO store and send stored checks result to reduce network activity (is it required?)
         }
 
         return $this;
