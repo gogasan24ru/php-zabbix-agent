@@ -1,5 +1,7 @@
 <?php
+class ZabbixAgentException extends Exception {
 
+}
 class ZabbixAgentSocketException extends ZabbixAgentException
 {
     public function __construct($message, $code = null, Exception $previous = null)
