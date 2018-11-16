@@ -12,3 +12,7 @@ class ZabbixAgentSocketException extends ZabbixAgentException
         parent::__construct($message . $errorMsg, $code, $previous);
     }
 }
+
+class ZabbixActiveAgentException extends Exception {
+
+}
