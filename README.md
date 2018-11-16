@@ -1,8 +1,9 @@
+## php-zabbix-agent with active option
+
+Zabbix Agent with php option implemented in PHP for long living php-servers
+
 Forked from [wizardjedi/php-zabbix-agent](https://github.com/wizardjedi/php-zabbix-agent/tree/d82ecd889d1bc95e42201888d343d29468cd5d2c)
 
-## php-zabbix-agent ![Build badge image](https://travis-ci.org/wizardjedi/php-zabbix-agent.svg?branch=master) [![codecov](https://codecov.io/gh/wizardjedi/php-zabbix-agent/branch/master/graph/badge.svg)](https://codecov.io/gh/wizardjedi/php-zabbix-agent)
-
-Zabbix Agent implemented in PHP for long living php-servers
 
 ## 1. Create `composer.json` file
 
@@ -34,29 +35,43 @@ $ composer update
 include("vendor/autoload.php");
 ```
 
-## 4. Simple script
+## 4.1. Simple script without active part
 
 ```php
 <?php
-
 include("vendor/autoload.php");
-
 $agent = ZabbixAgent::create(10051);
-
 $agent->start();
-
 $agent->setItem("some.key", ZabbixTimeDuration::now());
-
 while (true) {
     echo "Usefull payload\n";
-
     $agent->tick();
-
     usleep(500000);
 }
 ```
 
-## 5. Main classes
+## 4.2. Simple script with active part
+
+```php
+<?php
+include("vendor/autoload.php");
+$agent = ZabbixAgent::create(10051);
+$agent -> setupActive("127.0.0.1", //zabbix server should run
+    10051, 
+    "PHP-zabbix-agent",//hostname should match
+    "agent_debug_dev" //or setup agent discovery action
+    );
+$agent->start();
+$agent->setItem("some.key", ZabbixTimeDuration::now());
+while (true) {
+    echo "Usefull payload\n";
+    $agent->tick();
+    usleep(500000);
+}
+```
+
+
+## 6. Main classes
 
  * `ZabbixPrimitiveItem` - holds primitive values like int, string, float. Return `var_export()`'ed string for object or array
  * `ZabbixTimeDuration` - holds duration from moment in past to current time.
@@ -64,6 +79,3 @@ while (true) {
  * `ZabbixAvgRate` - calculats rate of processing
    * Use `acquire($count)` method to inform item of processed objects count.
 
-## 6. CI project page
-
-Checkout project build status on: https://travis-ci.org/wizardjedi/php-zabbix-agent
