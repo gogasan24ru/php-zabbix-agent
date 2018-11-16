@@ -16,7 +16,7 @@ Forked from [wizardjedi/php-zabbix-agent](https://github.com/wizardjedi/php-zabb
    "prefer-stable": true,
    "repositories": [
         {
-            "url": "https://github.com/wizardjedi/php-zabbix-agent.git",
+            "url": "https://github.com/gogasan24ru/php-zabbix-agent.git",
             "type": "git"
         }
    ]
@@ -69,7 +69,8 @@ while (true) {
     usleep(500000);
 }
 ```
-
+[Advanced example](https://github.com/gogasan24ru/php-zabbix-agent/blob/master/example.php)
+[Zabbix example template](https://github.com/gogasan24ru/php-zabbix-agent/blob/master/zbx_export_templates.xml)
 
 ## 6. Main classes
 
