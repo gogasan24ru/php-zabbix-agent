@@ -30,6 +30,12 @@ class ZabbixAgent
     protected $agentHostMetadata;
 
     /**
+     * Active agent configuration available. //TODO: convert to function, returning bool from isset($serverActive)
+     * @var bool
+     */
+    protected $activeAvailable=false;
+
+    /**
      * Hostname of Zabbix server for active checks.
      * @var string
      */
@@ -40,6 +46,23 @@ class ZabbixAgent
      * @var int
      */
     protected $serverActivePort;
+
+    /**
+     * Active configuration update interval in seconds.
+     * @var int
+     */
+    protected $serverActiveUpdateInterval=120;
+
+    /**
+     * Last active configuration update timestamp.
+     * @var int
+     */
+    protected $serverActiveUpdateLast;
+
+    /**
+     * @var array - current active configuration
+     */
+    protected $serverActiveConfiguration;
 
     //TODO: add items?
     //TODO: native tls required
@@ -78,35 +101,52 @@ class ZabbixAgent
 
     /**
      * Setup parameters, required for active mode.
-     * @param string $serverActive
-     * @param int $port
+     * @param string $serverActive Server for active checks, hostname or ip
+     * @param int $port Server for active checks, port number
      * @param string $agentHostName
      * @param string $agentHostMetadata
+     * @param int $updateInterval Active configuration update interval
      */
     public function setupActive($serverActive,
-                                       $port=10051,
-                                       $agentHostName=null,
-                                       $agentHostMetadata=null)
+                                   $port=10051,
+                                   $agentHostName=null,
+                                   $agentHostMetadata=null,
+                                   $updateInterval=120)
     {
         $this->serverActive=$serverActive;
-        $this->port=$port;
+        $this->serverActivePort=$port;
+        $this->serverActiveUpdateInterval=$updateInterval;
         if(isset($agentHostName))
         {
             $this->agentHostName=$agentHostName;
         }
         else
+        {
             if (gethostname()) {
                 $this->agentHostName=gethostname().'-php-zabbix-agent';
             }
             else {
                 $this->agentHostName='php-zabbix-agent';
             }
+        }
+        if(!isset($agentHostMetadata)){
+            $this->agentHostMetadata = "";// should add some phpinfo info?
+        }else $this->agentHostMetadata = $agentHostMetadata;
+        $this->activeAvailable=true;
+        $this->serverActiveUpdateLast=0;
+    }
 
-            if(!isset($agentHostMetadata)){
-                $this->agentHostMetadata = "";// should add some phpinfo info?
-            }
-
-
+    /**
+     * Builds active checks request string.
+     * @return string with placed values
+     */
+    public function getActiveRequest()
+    {
+        return '{
+	        "request":"active checks",
+        	"host":"'.$this->agentHostName.'",
+	        "host_metadata":"'.$this->agentHostMetadata.'"
+            }';
     }
 
     /**
@@ -123,16 +163,11 @@ class ZabbixAgent
 
     /**
      * Start listen socket.
-     * @param bool $active - true for active mode
      * @throws ZabbixAgentSocketException
      * @return ZabbixAgent
      */
-    public function start($active=false)
+    public function start()
     {
-        if($active){
-            //TODO run in active mode
-            return;
-        }
         $this->listenSocket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         if ($this->listenSocket === false) {
             throw new ZabbixAgentSocketException('Create socket error.');
@@ -161,13 +196,75 @@ class ZabbixAgent
         return $this;
     }
 
+    private function processActiveChecks()
+    {
+
+    }
+
+    /**
+     * Check if active configuration needs to be updated, update it if required.
+     * @throws ZabbixActiveAgentException
+     */
+    private function checkForActiveChecksUpdates()
+    {
+        $currentTime=time();
+        if(($currentTime-$this->serverActiveUpdateLast)>$this->serverActiveUpdateInterval)
+        {
+            $ans='';
+            //TODO run in active mode
+            $fp = fsockopen($this->serverActive, $this->serverActivePort, $errno, $errstr, 30);
+            if (!$fp) {
+                echo "$errstr ($errno)<br />\n";
+            } else {
+                $data=$this->getActiveRequest();
+                $out=ZabbixProtocol::buildPacket($data);
+                fwrite($fp, $out);
+                while (!feof($fp)) {
+                    $ans.=fgets($fp, 128);
+                }
+                fclose($fp);
+
+
+                if(ZabbixProtocol::ZABBIX_MAGIC!=substr($ans,0,4))
+                    throw new ZabbixActiveAgentException("Invalid packet received. Packet header mismatch.");
+                //if(ZabbixProtocol::ZABBIX_DELIMETER!=unpack("C",substr($ans,4,1)))
+                //    throw new ZabbixActiveAgentException("Invalid packet received."); //GOT 0x00
+                $payloadLength=ZabbixProtocol::getLengthFromPacket(substr($ans,5,8));
+                $payloadJson=substr($ans,13,$payloadLength);
+
+                if(strlen($payloadJson)!=$payloadLength)
+                    throw new ZabbixActiveAgentException("Invalid packet received. Wrong payload length.");
+
+                $payload=json_decode($payloadJson,true);
+                var_dump(json_last_error ());
+
+                switch (json_last_error()) {
+                    case JSON_ERROR_NONE:{break;}
+                    case JSON_ERROR_DEPTH:throw new ZabbixActiveAgentException("Configuration update error, JSON_ERROR_DEPTH");
+                    case JSON_ERROR_STATE_MISMATCH:throw new ZabbixActiveAgentException("Configuration update error, JSON_ERROR_STATE_MISMATCH");
+                    case JSON_ERROR_CTRL_CHAR:throw new ZabbixActiveAgentException("Configuration update error, JSON_ERROR_CTRL_CHAR");
+                    case JSON_ERROR_SYNTAX:throw new ZabbixActiveAgentException("Configuration update error, JSON_ERROR_SYNTAX");
+                    case JSON_ERROR_UTF8:throw new ZabbixActiveAgentException("Configuration update error, JSON_ERROR_UTF8");
+                    default:throw new ZabbixActiveAgentException("Configuration update error, no errorcode provided.");
+                }
+                if(!isset($payload['data']))
+                    throw new ZabbixActiveAgentException("Configuration update error, payload does contain data");
+
+                $this->serverActiveConfiguration=$payload['data'];
+                $this->serverActiveUpdateLast=$currentTime;
+            }
+        }
+    }
+
     /**
      * Method implements unit of work for server.
      * @throws ZabbixAgentException
      * @return ZabbixAgent
+     * @throws ZabbixActiveAgentException
      */
     public function tick()
     {
+        //setup socket for incoming connections
         try {
             /**
              * @todo fix @
@@ -180,12 +277,15 @@ class ZabbixAgent
             throw new ZabbixAgentSocketException('Socket error on accept.');
         }
 
+        //commands processing
         if ($connection > 0) {
             $commandRaw = socket_read($connection, 1024);
 
             if ($commandRaw !== false) {
                 $command = trim($commandRaw);
-
+//                var_dump($commandRaw);
+//                echo "<hr>";
+//                var_dump($command);
                 try {
                     $agentItem = $this->getItem($command);
                     $buf = ZabbixProtocol::serialize($agentItem);
@@ -202,6 +302,12 @@ class ZabbixAgent
             } else {
                 throw new ZabbixAgentSocketException('Socket read error.');
             }
+        }
+
+        if($this->activeAvailable)
+        {
+            $this->checkForActiveChecksUpdates();
+            $this->processActiveChecks();
         }
 
         return $this;
