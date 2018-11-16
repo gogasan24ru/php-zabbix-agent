@@ -6,6 +6,11 @@
 class ZabbixAgent
 {
     /**
+     * @var int log level
+     */
+    protected $logLevel=PHPZA_LL_ERROR;
+
+    /**
      * Items on this agent
      * @var array
      */
@@ -99,6 +104,11 @@ class ZabbixAgent
         $this->host = $host;
     }
 
+    public function setDebugLevel($level=PHPZA_LL_DEBUG)
+    {
+        $this->logLevel=$level;
+    }
+
     /**
      * Setup parameters, required for active mode.
      * @param string $serverActive Server for active checks, hostname or ip
@@ -134,6 +144,7 @@ class ZabbixAgent
         }else $this->agentHostMetadata = $agentHostMetadata;
         $this->activeAvailable=true;
         $this->serverActiveUpdateLast=0;
+        $this->logger(PHPZA_LL_INFO,__FUNCTION__." done.");
     }
 
     /**
@@ -192,10 +203,112 @@ class ZabbixAgent
         if ($nonBlockResult === false) {
             throw new ZabbixAgentSocketException('Socket set nonblocking error.');
         }
-
+        $this->logger(PHPZA_LL_INFO,__FUNCTION__." done");
         return $this;
     }
 
+
+    /**
+     * Performs log action. This function should be overrided due inheritance
+     * @param $logLevel int log level for accepted $message
+     * @param $message string message to log
+     */
+    private function logger($logLevel,$message)
+    {
+        if($logLevel<=$this->logLevel)
+        {
+            echo "[".date("Y-m-d H:i:s ".$this->microsec())."] ".$message.PHP_EOL;
+        }
+    }
+
+    /**
+     * @return int nanoseconds from $this->microsec()
+     */
+    private function nanosec()
+    {
+        return intval($this->microsec()*1e6);
+    }
+
+    /**
+     * @return int microtime, microseconds part only
+     */
+    private function microsec()
+    {
+        return intval(explode(" ", microtime())[0]);
+    }
+
+
+    /**
+     *
+     * @throws ZabbixActiveAgentException
+     */
+    private function sendActiveChecksResults()
+    {
+        if((time()-$this->activeSendLast)<$this->activeSendInterval){
+            return;
+        }
+        $this->activeSendLast=time();
+        $JSONbuf=json_encode($this->activeChecksResultsBuffer);
+        $this->logger(PHPZA_LL_DEBUG,__FUNCTION__." sending: ".$JSONbuf);
+        unset($this->activeChecksResultsBuffer);
+
+        $ans='';
+        $fp = fsockopen($this->serverActive, $this->serverActivePort, $errno, $errstr, 30);
+        if (!$fp) {
+
+            $this->logger(PHPZA_LL_ERROR,__FUNCTION__.$errstr ($errno));
+            throw new ZabbixActiveAgentException($errstr ($errno));
+        } else {
+            $out = ZabbixProtocol::buildPacket($JSONbuf);
+            fwrite($fp, $out);
+            while (!feof($fp)) {
+                $ans .= fgets($fp, 128);
+            }
+            fclose($fp);
+            if(ZabbixProtocol::ZABBIX_MAGIC!=substr($ans,0,4))
+                throw new ZabbixActiveAgentException("Invalid packet received. Packet header mismatch.");
+            //if(ZabbixProtocol::ZABBIX_DELIMETER!=unpack("C",substr($ans,4,1)))
+            //    throw new ZabbixActiveAgentException("Invalid packet received."); //GOT 0x00
+            $payloadLength=ZabbixProtocol::getLengthFromPacket(substr($ans,5,8));
+            $payloadJson=substr($ans,13,$payloadLength);
+
+            if(strlen($payloadJson)!=$payloadLength)
+                throw new ZabbixActiveAgentException("Invalid packet received. Wrong payload length.");
+
+            $payload=json_decode($payloadJson,true);
+
+            switch (json_last_error()) {
+                case JSON_ERROR_NONE:{
+                    $this->logger(PHPZA_LL_DEBUG,__FUNCTION__."JSON no errors");
+                    break;
+                }
+                case JSON_ERROR_DEPTH:throw new ZabbixActiveAgentException("Configuration update error, JSON_ERROR_DEPTH");
+                case JSON_ERROR_STATE_MISMATCH:throw new ZabbixActiveAgentException("Configuration update error, JSON_ERROR_STATE_MISMATCH");
+                case JSON_ERROR_CTRL_CHAR:throw new ZabbixActiveAgentException("Configuration update error, JSON_ERROR_CTRL_CHAR");
+                case JSON_ERROR_SYNTAX:throw new ZabbixActiveAgentException("Configuration update error, JSON_ERROR_SYNTAX");
+                case JSON_ERROR_UTF8:throw new ZabbixActiveAgentException("Configuration update error, JSON_ERROR_UTF8");
+                default:throw new ZabbixActiveAgentException("Configuration update error, no errorcode provided.");
+            }
+
+            $this->logger(PHPZA_LL_INFO,__FUNCTION__." done. Server answer: ".$payloadJson);
+            //TODO walkaround for
+            /**
+             * {
+            "response":"success",
+            "info":"processed: 3;
+            failed: 0;
+            total: 3;
+            seconds spent: 0.000437"
+            }
+             */
+
+        }
+        $this->logger(PHPZA_LL_INFO,__FUNCTION__." done");
+    }
+
+    /**
+     * @throws Exception
+     */
     private function processActiveChecks()
     {
 
@@ -214,7 +327,7 @@ class ZabbixAgent
             //TODO run in active mode
             $fp = fsockopen($this->serverActive, $this->serverActivePort, $errno, $errstr, 30);
             if (!$fp) {
-                echo "$errstr ($errno)<br />\n";
+                throw new ZabbixActiveAgentException($errstr ($errno));
             } else {
                 $data=$this->getActiveRequest();
                 $out=ZabbixProtocol::buildPacket($data);
@@ -236,7 +349,6 @@ class ZabbixAgent
                     throw new ZabbixActiveAgentException("Invalid packet received. Wrong payload length.");
 
                 $payload=json_decode($payloadJson,true);
-                var_dump(json_last_error ());
 
                 switch (json_last_error()) {
                     case JSON_ERROR_NONE:{break;}
@@ -252,7 +364,10 @@ class ZabbixAgent
 
                 $this->serverActiveConfiguration=$payload['data'];
                 $this->serverActiveUpdateLast=$currentTime;
+
+                $this->logger(PHPZA_LL_DEBUG,__FUNCTION__." update: ".$payloadJson);
             }
+            $this->logger(PHPZA_LL_INFO,__FUNCTION__." done");
         }
     }
 
