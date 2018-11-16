@@ -1,3 +1,5 @@
+Forked from [wizardjedi/php-zabbix-agent](https://github.com/wizardjedi/php-zabbix-agent/tree/d82ecd889d1bc95e42201888d343d29468cd5d2c)
+
 ## php-zabbix-agent ![Build badge image](https://travis-ci.org/wizardjedi/php-zabbix-agent.svg?branch=master) [![codecov](https://codecov.io/gh/wizardjedi/php-zabbix-agent/branch/master/graph/badge.svg)](https://codecov.io/gh/wizardjedi/php-zabbix-agent)
 
 Zabbix Agent implemented in PHP for long living php-servers
