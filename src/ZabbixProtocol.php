@@ -26,6 +26,17 @@ final class ZabbixProtocol
     }
 
     /**
+     * Return actual payload size from provided packet fragment
+     * @param $data string packet fragment
+     * @return int encoded int value
+     */
+    public static function getLengthFromPacket($data)
+    {
+        $bytes=unpack("V*",$data);
+        return $bytes[1]+($bytes[2]<<32);
+    }
+
+    /**
      * Get length in zabbix protocol format
      * @param mixed $value
      * @return string
@@ -51,5 +62,14 @@ final class ZabbixProtocol
         $value = $item->toValue();
 
         return self::getHeader() . self::getLength($value) . $value;
+    }
+
+    /**
+     * @param string $data JSON-encoded data
+     * @return string
+     */
+    public static function buildPacket($data)
+    {
+        return self::getHeader() . self::getLength($data) . $data;
     }
 }
