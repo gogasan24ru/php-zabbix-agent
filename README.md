@@ -1,6 +1,6 @@
 ## php-zabbix-agent with active option
 
-Zabbix Agent with php option implemented in PHP for long living php-servers
+Zabbix Agent with active option implemented in PHP for long living php-servers
 
 Forked from [wizardjedi/php-zabbix-agent](https://github.com/wizardjedi/php-zabbix-agent/tree/d82ecd889d1bc95e42201888d343d29468cd5d2c)
 
@@ -71,7 +71,7 @@ while (true) {
 ```
 [Advanced example](https://github.com/gogasan24ru/php-zabbix-agent/blob/master/example.php)
 
-[Zabbix example template](https://github.com/gogasan24ru/php-zabbix-agent/blob/master/zbx_export_templates.xml)
+[Zabbix template example](https://github.com/gogasan24ru/php-zabbix-agent/blob/master/zbx_export_templates.xml)
 
 ## 5. Main classes
 
