@@ -195,6 +195,10 @@ class ZabbixAgent
         }else $this->agentHostMetadata = $agentHostMetadata;
         $this->activeAvailable=true;
         $this->serverActiveUpdateLast=0;
+        $this->setItem("agent.ping", ZabbixPrimitiveItem::create("1")); //zabbix_get -s 127.0.0.1 -p 10351 -k "agent.ping"
+        $this->setItem("agent.hostname", ZabbixPrimitiveItem::create("PHP-zabbix-agent"));
+        $this->setItem("agent.version", ZabbixPrimitiveItem::create("PHP-zabbix-agent-0.0.1"));
+
         $this->logger(PHPZA_LL_INFO,__FUNCTION__." done.");
     }
 

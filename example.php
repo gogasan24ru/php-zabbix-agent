@@ -29,9 +29,6 @@ function get_server_memory_usage(){
 }
 
 $agent->setItem("some.key", ZabbixTimeDuration::now());
-$agent->setItem("agent.ping", ZabbixPrimitiveItem::create("1")); //zabbix_get -s 127.0.0.1 -p 10351 -k "agent.ping"
-$agent->setItem("agent.hostname", ZabbixPrimitiveItem::create("PHP-zabbix-agent"));
-$agent->setItem("agent.version", ZabbixPrimitiveItem::create("PHP-zabbix-agent-0.0.1"));
 $agent->setItem("os.mem", ZabbixPrimitiveItem::create(trim(get_server_memory_usage(),'%')));
 
 while (true) {
