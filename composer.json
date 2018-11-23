@@ -1,6 +1,6 @@
 {
     "name": "a1s/php-zabbix-agent",
-    "description": "Zabbix Agent implemented in PHP for long living php-servers",
+    "description": "Zabbix Agent implemented in PHP for long living php-servers with active checks support",
     "authors": [
         {
             "name": "A1-Systems Team",
