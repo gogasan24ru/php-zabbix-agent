@@ -131,6 +131,12 @@ class ZabbixAgent
         $this->setupPassive($host,$port);
     }
 
+    /**
+     * Directly setup passive if called without passive-specified args
+     * @param $host string ip address, listen on
+     * @param $port int port, listen on
+     * @throws ZabbixAgentException if argument mistake occurred
+     */
     public function setupPassive($host, $port)
     {
         if (empty($host)) {
@@ -145,7 +151,10 @@ class ZabbixAgent
         $this->host = $host;
     }
 
-
+    /**
+     * Set debug level for stdout logging
+     * @param int $level
+     */
     public function setDebugLevel($level=PHPZA_LL_DEBUG)
     {
         $this->logLevel=$level;
