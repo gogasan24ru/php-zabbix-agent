@@ -54,14 +54,24 @@ final class ZabbixProtocol
 
     /**
      * Serialize item to zabbix answer format
-     * @param InterfaceZabbixItem $item
+     * @param InterfaceZabbixItem|InterfaceZabbixItemWithArgs $item
      * @return string
+     * @throws ZabbixAgentException
      */
-    public static function serialize(InterfaceZabbixItem $item)
+    public static function serialize($item,$arguments)
     {
-        $value = $item->toValue();
+        $implements=class_implements($item);
+        if(in_array('InterfaceZabbixItemWithArgs',$implements)
+            ||in_array('InterfaceZabbixItem',$implements))
+        {
+            if($arguments)
+                $value = $item->toValue($arguments);
+            else
+                $value = $item->toValue();
 
-        return self::getHeader() . self::getLength($value) . $value;
+            return self::getHeader() . self::getLength($value) . $value;
+        }
+        throw new ZabbixAgentException('invalid argument given');
     }
 
     /**

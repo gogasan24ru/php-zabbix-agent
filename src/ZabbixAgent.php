@@ -390,7 +390,13 @@ class ZabbixAgent
                 $this->serverActiveConfiguration[$checkKey]['delay']){
                 $this->logger(PHPZA_LL_DEBUG,__FUNCTION__." processing: ".$check['key']);
                 try{
-                    $this->activeChecksResultsBuffer['data'][$key]['value']=$this->getItem($check['key'])->toValue();
+                    $arguments=$this->extractArguments($check['key']);
+                    if($arguments)
+                        $this->activeChecksResultsBuffer['data'][$key]['value']=
+                            $this->getItem($check['key'])->toValue($arguments);
+                    else
+                        $this->activeChecksResultsBuffer['data'][$key]['value']=
+                            $this->getItem($check['key'])->toValue();
                     $processed++;
                 }catch (ZabbixNotSupportedItem $e){
                     //unset($check['value']);//=$e->getMessage();
@@ -506,8 +512,9 @@ class ZabbixAgent
                 if ($commandRaw !== false) {
                     $command = trim($commandRaw);
                     try {
+                        $itemArguments=$this->extractArguments($command);
                         $agentItem = $this->getItem($command);
-                        $buf = ZabbixProtocol::serialize($agentItem);
+                        $buf = ZabbixProtocol::serialize($agentItem,$itemArguments);
                     } catch (Exception $e) {
                         socket_close($connection);
                         throw new ZabbixAgentException("Serialize item error.", 0, $e);
@@ -535,12 +542,33 @@ class ZabbixAgent
     }
 
     /**
+     * @param $key string Key to parse
+     * @return array|bool|ZabbixNotSupportedItem returns array if args persist, false if no and exception format error
+     */
+    private function extractArguments($key)
+    {
+        $matches = array();
+        preg_match('/\[.+\]/', $key, $matches);
+        if(count($key)>0){
+            if(count($key)>1)
+            return new ZabbixNotSupportedItem(" Key '${key}' not registered.");
+            $ia=explode(',',trim($matches[0],'[]'));
+            return $ia;
+        }
+        return false;
+    }
+
+    /**
      * Get item from agent item storage
      * @param string $key
      * @return InterfaceZabbixItem
      */
     public function getItem($key)
     {
+        if($this->extractArguments($key))
+        {
+            $key=explode('[',$key)[0];
+        }
         if (!isset($this->items[$key])) {
             return new ZabbixNotSupportedItem(" Key '${key}' not registered.");
         }
