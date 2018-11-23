@@ -237,7 +237,7 @@ class ZabbixAgent
      */
     public function start()
     {
-        if(isset($port)) {
+        if(isset($this->port)) {
             $this->listenSocket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
             if ($this->listenSocket === false) {
                 throw new ZabbixAgentSocketException('Create socket error.');
@@ -505,9 +505,6 @@ class ZabbixAgent
 
                 if ($commandRaw !== false) {
                     $command = trim($commandRaw);
-    //                var_dump($commandRaw);
-    //                echo "<hr>";
-    //                var_dump($command);
                     try {
                         $agentItem = $this->getItem($command);
                         $buf = ZabbixProtocol::serialize($agentItem);
@@ -551,6 +548,9 @@ class ZabbixAgent
         return $this->items[$key];
     }
 
+    /**
+     * @return array list of supported keys
+     */
     public function getItems()
     {
         return $this->items;
@@ -559,7 +559,7 @@ class ZabbixAgent
     /**
      * Set item to agent storage
      * @param string $key
-     * @param InterfaceZabbixItem $val
+     * @param InterfaceZabbixItem|InterfaceZabbixItemWithArgs $val
      */
     public function setItem($key, $val)
     {
