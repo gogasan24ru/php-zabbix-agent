@@ -59,6 +59,26 @@ class ZabbixAgent
     protected $serverActiveUpdateInterval=120;
 
     /**
+     * @return array current active configuration with ['payload'] config array, ['last'] unix timestamp last check
+     */
+    public function getServerActiveConfiguration()
+    {
+        return array(
+            'payload'=>$this->serverActiveConfiguration,
+            'last'=>$this->serverActiveUpdateLast
+        );
+    }
+
+    /**
+     * @param array $source - ['payload'] config array, ['last'] unix timestamp last check
+     */
+    public function setServerActiveConfiguration(array $source)
+    {
+        $this->serverActiveConfiguration=$source['payload'];
+        $this->serverActiveUpdateLast=$source['last'];
+    }
+
+    /**
      * Last active configuration update timestamp.
      * @var int
      */
@@ -133,10 +153,10 @@ class ZabbixAgent
      * @param int $updateInterval Active configuration update interval
      */
     public function setupActive($serverActive,
-                                   $port=10051,
-                                   $agentHostName=null,
-                                   $agentHostMetadata=null,
-                                   $updateInterval=120)
+                                $port=10051,
+                                $agentHostName=null,
+                                $agentHostMetadata=null,
+                                $updateInterval=120)
     {
         $this->serverActive=$serverActive;
         $this->serverActivePort=$port;
@@ -257,7 +277,7 @@ class ZabbixAgent
      *
      * @throws ZabbixActiveAgentException
      */
-    private function sendActiveChecksResults()
+    public function sendActiveChecksResults()
     {
         if((time()-$this->activeSendLast)<$this->activeSendInterval){
             return;
@@ -324,7 +344,7 @@ class ZabbixAgent
     /**
      * @throws Exception
      */
-    private function processActiveChecks()
+    public function processActiveChecks()
     {
         $processed=0;
         $failed=0;
@@ -340,7 +360,7 @@ class ZabbixAgent
             //var_dump($check);
             if(!isset($this->serverActiveConfiguration[$checkKey]['lastRun']))
                 $this->serverActiveConfiguration[$checkKey]['lastRun']=0;
-                //$check['lastRun']=0;
+            //$check['lastRun']=0;
             if(($currentTime-$this->serverActiveConfiguration[$checkKey]['lastRun'])>
                 $this->serverActiveConfiguration[$checkKey]['delay']){
                 $this->logger(PHPZA_LL_DEBUG,__FUNCTION__." processing: ".$check['key']);
@@ -379,7 +399,7 @@ class ZabbixAgent
      * Check if active configuration needs to be updated, update it if required.
      * @throws ZabbixActiveAgentException
      */
-    private function checkForActiveChecksUpdates()
+    public function checkForActiveChecksUpdates()
     {
         $currentTime=time();
         if(($currentTime-$this->serverActiveUpdateLast)>$this->serverActiveUpdateInterval)
@@ -420,12 +440,13 @@ class ZabbixAgent
                     default:throw new ZabbixActiveAgentException("Configuration update error, no errorcode provided.");
                 }
                 if(!isset($payload['data']))
-                    throw new ZabbixActiveAgentException("Configuration update error, payload does contain data");
+                    throw new ZabbixActiveAgentException("Configuration update error, payload does not contain data, got value:".$payload['data']);
 
                 $this->serverActiveConfiguration=$payload['data'];
                 $this->serverActiveUpdateLast=$currentTime;
 
                 $this->logger(PHPZA_LL_DEBUG,__FUNCTION__." update: ".$payloadJson);
+                return $payload;
             }
             $this->logger(PHPZA_LL_INFO,__FUNCTION__." done");
         }
@@ -498,10 +519,15 @@ class ZabbixAgent
     public function getItem($key)
     {
         if (!isset($this->items[$key])) {
-            return new ZabbixNotSupportedItem("Key '${key}' not registered.");
+            return new ZabbixNotSupportedItem(" Key '${key}' not registered.");
         }
 
         return $this->items[$key];
+    }
+
+    public function getItems()
+    {
+        return $this->items;
     }
 
     /**
