@@ -8,10 +8,10 @@ foreach (glob("src/*.php") as $filename)
 
 $agent = ZabbixAgent::create(10351); //-p 10351 for zabbix_get
 $agent->setDebugLevel();
-$agent -> setupActive("gogasan.tk",
+$agent -> setupActive("127.0.0.1",
     10051,
-    "P2HP-zabbix-agent",
-    "agent_de2bug_dev");
+    "PHP-zabbix-agent",
+    "agent_debug_dev");
 
 $agent->start();
 
