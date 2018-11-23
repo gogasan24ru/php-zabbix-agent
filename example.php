@@ -31,8 +31,10 @@ function get_server_memory_usage(){
 
 $agent->setItem("some.key", ZabbixTimeDuration::now());
 $agent->setItem("math.plus", ZabbixArgumentedItem::create(
-    function ($args) { return intval($args[0])+intval($args[1]);}
+    function ($args) { return floatval($args[0])+floatval($args[1]);}
     ));
+$multiply = function ($args) {return floatval($args[0])*floatval($args[1]);};
+$agent->setItem("math.multiply", ZabbixArgumentedItem::create($multiply));
 $agent->setItem("os.mem", ZabbixPrimitiveItem::create(trim(get_server_memory_usage(),'%')));
 
 while (true) {
