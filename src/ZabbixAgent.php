@@ -65,7 +65,8 @@ class ZabbixAgent
     {
         return array(
             'payload'=>$this->serverActiveConfiguration,
-            'last'=>$this->serverActiveUpdateLast
+            'last'=>$this->serverActiveUpdateLast,
+            'buffer'=>$this->activeChecksResultsBuffer
         );
     }
 
@@ -76,6 +77,7 @@ class ZabbixAgent
     {
         $this->serverActiveConfiguration=$source['payload'];
         $this->serverActiveUpdateLast=$source['last'];
+        $this->activeChecksResultsBuffer=$source['buffer'];
     }
 
     /**
@@ -173,7 +175,7 @@ class ZabbixAgent
                                 $agentHostName=null,
                                 $agentHostMetadata=null,
                                 $updateInterval=120)
-    {
+    {//TODO move default values from code below to constants.
         $this->serverActive=$serverActive;
         $this->serverActivePort=$port;
         $this->serverActiveUpdateInterval=$updateInterval;
@@ -195,7 +197,9 @@ class ZabbixAgent
         }else $this->agentHostMetadata = $agentHostMetadata;
         $this->activeAvailable=true;
         $this->serverActiveUpdateLast=0;
-        $this->setItem("agent.ping", ZabbixPrimitiveItem::create("1")); //zabbix_get -s 127.0.0.1 -p 10351 -k "agent.ping"
+
+        //set agent-specific keys:
+        $this->setItem("agent.ping", ZabbixPrimitiveItem::create("1"));
         $this->setItem("agent.hostname", ZabbixPrimitiveItem::create($this->agentHostName));
         $this->setItem("agent.version", ZabbixPrimitiveItem::create("PHP-zabbix-agent-0.0.1"));
 
