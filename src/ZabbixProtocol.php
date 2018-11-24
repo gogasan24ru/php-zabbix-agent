@@ -55,6 +55,7 @@ final class ZabbixProtocol
     /**
      * Serialize item to zabbix answer format
      * @param InterfaceZabbixItem|InterfaceZabbixItemWithArgs $item
+     * @param $arguments array
      * @return string
      * @throws ZabbixAgentException
      */

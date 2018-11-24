@@ -265,6 +265,7 @@ class ZabbixAgent
             $this->logger(PHPZA_LL_INFO, __FUNCTION__ . " done");
             return $this;
         }
+        return $this;
     }
 
 
@@ -351,7 +352,7 @@ class ZabbixAgent
             }
 
             $this->logger(PHPZA_LL_INFO,__FUNCTION__." done. Server answer: ".$payloadJson);
-            //TODO walkaround for
+            //TODO? walkaround for $payload
             /**
              * {
             "response":"success",
@@ -367,7 +368,7 @@ class ZabbixAgent
     }
 
     /**
-     * @throws Exception
+     * Calculates values for keys
      */
     public function processActiveChecks()
     {
@@ -479,8 +480,9 @@ class ZabbixAgent
                 $this->logger(PHPZA_LL_DEBUG,__FUNCTION__." update: ".$payloadJson);
                 return $payload;
             }
-            $this->logger(PHPZA_LL_INFO,__FUNCTION__." done");
         }
+        $this->logger(PHPZA_LL_INFO,__FUNCTION__." done");
+        return null;
     }
 
     /**
