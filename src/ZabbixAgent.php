@@ -398,9 +398,6 @@ class ZabbixAgent
                         $this->activeChecksResultsBuffer['data'][$key]['value']=
                             $this->getItem($check['key'])->toValue();
                     $processed++;
-                }catch (ZabbixNotSupportedItem $e){
-                    //unset($check['value']);//=$e->getMessage();
-                    $failed++;
                 }
                 catch (Exception $e)
                 {
