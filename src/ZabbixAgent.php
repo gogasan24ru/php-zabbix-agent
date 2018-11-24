@@ -111,7 +111,7 @@ class ZabbixAgent
      * Default port for zabbix agent
      * @var int
      */
-    protected $port = 10050;
+    protected $port;
 
     /**
      * Host for server listen socket
