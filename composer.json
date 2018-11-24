@@ -5,6 +5,11 @@
         {
             "name": "A1-Systems Team",
             "email": "info@a1-systems.com"
+        },
+        {
+            "name": "gogasan",
+            "email": "a@gogasan.tk",
+            "role": "Developer"
         }
     ],
     "autoload": {
