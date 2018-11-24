@@ -1,7 +1,7 @@
 ## php-zabbix-agent with active option
 
-Zabbix Agent with active option implemented in PHP for long living php-servers
-
+Zabbix Agent with active option implemented in PHP
+ 
 Forked from [wizardjedi/php-zabbix-agent](https://github.com/wizardjedi/php-zabbix-agent/tree/d82ecd889d1bc95e42201888d343d29468cd5d2c)
 
 
