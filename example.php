@@ -39,6 +39,16 @@ $agent->setItem("math.plus", ZabbixArgumentedItem::create(
 //or set Closure to variable:
 $multiply = function ($args) {return floatval($args[0])*floatval($args[1]);};
 $agent->setItem("math.multiply", ZabbixArgumentedItem::create($multiply));
+
+
+$discoveryTrapper=ZabbixDiscoveryTrap::create();
+$discoveryTrapper->addItem(array('{#PARAM}'=>'foofoofoo'));
+$discoveryTrapper->addItem(array('{#PARAM}'=>'barbar'));
+$agent->setItem("some.discovery",$discoveryTrapper);
+$agent->setItem("some.item", ZabbixArgumentedItem::create(
+    function ($args) { return strlen($args[0]);}
+));
+
 $agent->setItem("os.mem", ZabbixPrimitiveItem::create(trim(get_server_memory_usage(),'%')));
 
 while (true) {
