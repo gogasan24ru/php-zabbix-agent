@@ -52,7 +52,7 @@ $agent->setItem("some.item", ZabbixArgumentedItem::create(
 $agent->setItem("os.mem", ZabbixPrimitiveItem::create(trim(get_server_memory_usage(),'%')));
 
 while (true) {
-    echo "Usefull payload\n";
+    echo "Useful payload\n";
 
     $agent->tick();
 

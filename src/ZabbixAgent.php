@@ -269,7 +269,7 @@ class ZabbixAgent
 
 
     /**
-     * Performs log action. This function should be overrided due inheritance
+     * Performs log action. This function should be overridden due inheritance
      * @param $logLevel int log level for accepted $message
      * @param $message string message to log
      */
@@ -308,18 +308,18 @@ class ZabbixAgent
             return;
         }
         $this->activeSendLast=time();
-        $JSONbuf=json_encode($this->activeChecksResultsBuffer);
-        $this->logger(PHPZA_LL_DEBUG,__FUNCTION__." sending: ".$JSONbuf);
+        $JSONBuf=json_encode($this->activeChecksResultsBuffer);
+        $this->logger(PHPZA_LL_DEBUG,__FUNCTION__." sending: ".$JSONBuf);
         unset($this->activeChecksResultsBuffer);
 
         $ans='';
-        $fp = fsockopen($this->serverActive, $this->serverActivePort, $errno, $errstr, 30);
+        $fp = fsockopen($this->serverActive, $this->serverActivePort, $errNo, $errStr, 30);
         if (!$fp) {
 
-            $this->logger(PHPZA_LL_ERROR,__FUNCTION__.$errstr ($errno));
-            throw new ZabbixActiveAgentException($errstr ($errno));
+            $this->logger(PHPZA_LL_ERROR,__FUNCTION__.$errStr ($errNo));
+            throw new ZabbixActiveAgentException($errStr ($errNo));
         } else {
-            $out = ZabbixProtocol::buildPacket($JSONbuf);
+            $out = ZabbixProtocol::buildPacket($JSONBuf);
             fwrite($fp, $out);
             while (!feof($fp)) {
                 $ans .= fgets($fp, 128);
@@ -327,7 +327,7 @@ class ZabbixAgent
             fclose($fp);
             if(ZabbixProtocol::ZABBIX_MAGIC!=substr($ans,0,4))
                 throw new ZabbixActiveAgentException("Invalid packet received. Packet header mismatch.");
-            //if(ZabbixProtocol::ZABBIX_DELIMETER!=unpack("C",substr($ans,4,1)))
+            //if(ZabbixProtocol::ZABBIX_DELIMITER!=unpack("C",substr($ans,4,1)))
             //    throw new ZabbixActiveAgentException("Invalid packet received."); //GOT 0x00
             $payloadLength=ZabbixProtocol::getLengthFromPacket(substr($ans,5,8));
             $payloadJson=substr($ans,13,$payloadLength);
@@ -347,7 +347,7 @@ class ZabbixAgent
                 case JSON_ERROR_CTRL_CHAR:throw new ZabbixActiveAgentException("Configuration update error, JSON_ERROR_CTRL_CHAR");
                 case JSON_ERROR_SYNTAX:throw new ZabbixActiveAgentException("Configuration update error, JSON_ERROR_SYNTAX");
                 case JSON_ERROR_UTF8:throw new ZabbixActiveAgentException("Configuration update error, JSON_ERROR_UTF8");
-                default:throw new ZabbixActiveAgentException("Configuration update error, no errorcode provided.");
+                default:throw new ZabbixActiveAgentException("Configuration update error, no error code provided.");
             }
 
             $this->logger(PHPZA_LL_INFO,__FUNCTION__." done. Server answer: ".$payloadJson);
@@ -436,9 +436,9 @@ class ZabbixAgent
         if(($currentTime-$this->serverActiveUpdateLast)>$this->serverActiveUpdateInterval)
         {
             $ans='';
-            $fp = fsockopen($this->serverActive, $this->serverActivePort, $errno, $errstr, 30);
+            $fp = fsockopen($this->serverActive, $this->serverActivePort, $errNo, $errStr, 30);
             if (!$fp) {
-                throw new ZabbixActiveAgentException($errstr ($errno));
+                throw new ZabbixActiveAgentException($errStr ($errNo));
             } else {
                 $data=$this->getActiveRequest();
                 $out=ZabbixProtocol::buildPacket($data);
@@ -451,7 +451,7 @@ class ZabbixAgent
 
                 if(ZabbixProtocol::ZABBIX_MAGIC!=substr($ans,0,4))
                     throw new ZabbixActiveAgentException("Invalid packet received. Packet header mismatch.");
-                //if(ZabbixProtocol::ZABBIX_DELIMETER!=unpack("C",substr($ans,4,1)))
+                //if(ZabbixProtocol::ZABBIX_DELIMITER!=unpack("C",substr($ans,4,1)))
                 //    throw new ZabbixActiveAgentException("Invalid packet received."); //GOT 0x00
                 $payloadLength=ZabbixProtocol::getLengthFromPacket(substr($ans,5,8));
                 $payloadJson=substr($ans,13,$payloadLength);
@@ -468,7 +468,7 @@ class ZabbixAgent
                     case JSON_ERROR_CTRL_CHAR:throw new ZabbixActiveAgentException("Configuration update error, JSON_ERROR_CTRL_CHAR");
                     case JSON_ERROR_SYNTAX:throw new ZabbixActiveAgentException("Configuration update error, JSON_ERROR_SYNTAX");
                     case JSON_ERROR_UTF8:throw new ZabbixActiveAgentException("Configuration update error, JSON_ERROR_UTF8");
-                    default:throw new ZabbixActiveAgentException("Configuration update error, no errorcode provided.");
+                    default:throw new ZabbixActiveAgentException("Configuration update error, no error code provided.");
                 }
                 if(!isset($payload['data']))
                     throw new ZabbixActiveAgentException("Configuration update error, payload does not contain data, got value:".$payload['data']);

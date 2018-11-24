@@ -23,7 +23,7 @@ Forked from [wizardjedi/php-zabbix-agent](https://github.com/wizardjedi/php-zabb
 }
 ```
 
-## 2. Update composer deps
+## 2. Update composer dependencies
 
 ```
 $ composer update
@@ -64,7 +64,7 @@ $agent -> setupActive("127.0.0.1", //zabbix server should run
 $agent->start();
 $agent->setItem("some.key", ZabbixTimeDuration::now());
 while (true) {
-    echo "Usefull payload\n";
+    echo "Useful payload\n";
     $agent->tick();
     usleep(500000);
 }
@@ -78,6 +78,6 @@ while (true) {
  * `ZabbixPrimitiveItem` - holds primitive values like int, string, float. Return `var_export()`'ed string for object or array
  * `ZabbixTimeDuration` - holds duration from moment in past to current time.
    * Use `acceptIfNewer($timeValue)` to move moment near in past
- * `ZabbixAvgRate` - calculats rate of processing
+ * `ZabbixAvgRate` - calculates rate of processing
    * Use `acquire($count)` method to inform item of processed objects count.
  * `ZabbixArgumentedItem` - holds item with arguments, use `Closure` to add function, see `example.php` for details.

@@ -12,9 +12,9 @@ final class ZabbixProtocol
     const ZABBIX_MAGIC = "ZBXD";
 
     /**
-     * Header delimeter character code
+     * Header delimiter character code
      */
-    const ZABBIX_DELIMETER = 1;
+    const ZABBIX_DELIMITER = 1;
 
     /**
      * Construct <HEADER>
@@ -22,7 +22,7 @@ final class ZabbixProtocol
      */
     public static function getHeader()
     {
-        return self::ZABBIX_MAGIC . pack("C", self::ZABBIX_DELIMETER);
+        return self::ZABBIX_MAGIC . pack("C", self::ZABBIX_DELIMITER);
     }
 
     /**
