@@ -401,7 +401,10 @@ class ZabbixAgent
                 }
                 catch (Exception $e)
                 {
-                    throw $e; //unregistered exception type TODO: walkaround
+                    $this->activeChecksResultsBuffer['data'][$key]['value']=
+                        new ZabbixNotSupportedItem(" Key ".
+                            $check['key'].
+                            " not registered.");
                 }
                 $check['lastRun']=$currentTime;
                 $this->serverActiveConfiguration[$checkKey]['lastRun']=$currentTime;
