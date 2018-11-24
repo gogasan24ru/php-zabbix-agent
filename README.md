@@ -81,3 +81,4 @@ while (true) {
  * `ZabbixAvgRate` - calculates rate of processing
    * Use `acquire($count)` method to inform item of processed objects count.
  * `ZabbixArgumentedItem` - holds item with arguments, use `Closure` to add function, see `example.php` for details.
+ * `ZabbixDiscoveryTrap` - holds item returning discovery data for used key. 
