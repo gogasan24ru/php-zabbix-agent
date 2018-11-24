@@ -34,7 +34,7 @@ $agent->setItem("some.key", ZabbixTimeDuration::now());
 
 //inline Closure:
 $agent->setItem("math.plus", ZabbixArgumentedItem::create(
-    function ($args) { return floatval($args[0])+floatval($args[1]);}
+    function ($args) { return floatval($args[0])+floatval($args[1]);},array(50,0)
     ));
 //or set Closure to variable:
 $multiply = function ($args) {return floatval($args[0])*floatval($args[1]);};
