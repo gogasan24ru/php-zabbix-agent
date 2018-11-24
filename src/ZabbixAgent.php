@@ -535,7 +535,6 @@ class ZabbixAgent
             $this->checkForActiveChecksUpdates();
             $this->processActiveChecks();
             $this->sendActiveChecksResults();
-            //TODO store and send stored checks result to reduce network activity (is it required?)
         }
 
         return $this;
@@ -544,14 +543,17 @@ class ZabbixAgent
     /**
      * @param $key string Key to parse
      * @return array|bool|ZabbixNotSupportedItem returns array if args persist, false if no and exception format error
+     * @throws ZabbixAgentException
      */
     private function extractArguments($key)
     {
         $matches = array();
-        preg_match('/\[.+\]/', $key, $matches);
-        if(count($key)>0){
-            if(count($key)>1)
-            return new ZabbixNotSupportedItem(" Key '${key}' not registered.");
+        preg_match('/\[[^\[\]]+\]/', $key, $matches);
+        if(count($matches)>0){
+            if(count($matches)>1)
+            {
+                throw new ZabbixAgentException("Multiply argument brackets.");
+            }
             $ia=explode(',',trim($matches[0],'[]'));
             return $ia;
         }
@@ -565,10 +567,17 @@ class ZabbixAgent
      */
     public function getItem($key)
     {
-        if($this->extractArguments($key))
-        {
-            $key=explode('[',$key)[0];
+        try{
+            if($this->extractArguments($key))
+            {
+                $key=explode('[',$key)[0];
+            }
         }
+        catch (Exception $e)
+        {
+            return new ZabbixNotSupportedItem(" Key '${key}' not registered.");
+        }
+
         if (!isset($this->items[$key])) {
             return new ZabbixNotSupportedItem(" Key '${key}' not registered.");
         }
