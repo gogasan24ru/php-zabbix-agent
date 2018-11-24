@@ -32,7 +32,7 @@ function get_server_memory_usage(){
 $agent->setItem("some.key", ZabbixTimeDuration::now());
 //Items with arguments
 
-//inline Closure:
+//inline Closure with default values:
 $agent->setItem("math.plus", ZabbixArgumentedItem::create(
     function ($args) { return floatval($args[0])+floatval($args[1]);},array(50,0)
     ));
