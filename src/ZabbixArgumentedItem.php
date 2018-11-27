@@ -22,6 +22,7 @@ class ZabbixArgumentedItem implements InterfaceZabbixItemWithArgs
 
     function toValue($args)
     {
+        if(!isset($args))$args=$this->defaults;
         if(isset($this->defaults))
         {
             foreach ($args as $key => $arg)
