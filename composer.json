@@ -1,9 +1,10 @@
 {
-    "name": "a1s/php-zabbix-agent",
-    "description": "Zabbix Agent implemented in PHP for long living php-servers with active checks support",
+    "name": "gogasan/php-zabbix-agent",
+    "description": "Zabbix Agent implemented in PHP",
     "authors": [
         {
             "name": "A1-Systems Team",
+            "homepage": "https://github.com/wizardjedi/php-zabbix-agent/tree/d82ecd889d1bc95e42201888d343d29468cd5d2c",
             "email": "info@a1-systems.com"
         },
         {
