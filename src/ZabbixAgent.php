@@ -59,28 +59,6 @@ class ZabbixAgent
     protected $serverActiveUpdateInterval=120;
 
     /**
-     * @return array current active configuration with ['payload'] config array, ['last'] unix timestamp last check
-     */
-    public function getServerActiveConfiguration()
-    {
-        return array(
-            'payload'=>$this->serverActiveConfiguration,
-            'last'=>$this->serverActiveUpdateLast,
-            'buffer'=>$this->activeChecksResultsBuffer
-        );
-    }
-
-    /**
-     * @param array $source - ['payload'] config array, ['last'] unix timestamp last check
-     */
-    public function setServerActiveConfiguration(array $source)
-    {
-        $this->serverActiveConfiguration=$source['payload'];
-        $this->serverActiveUpdateLast=$source['last'];
-        $this->activeChecksResultsBuffer=$source['buffer'];
-    }
-
-    /**
      * Last active configuration update timestamp.
      * @var int
      */
@@ -122,6 +100,31 @@ class ZabbixAgent
     protected $host = "0.0.0.0";
 
     /**
+     * @return array current active configuration with ['payload'] config array, ['last'] unix timestamp last check
+     */
+    public function getServerActiveConfiguration()
+    {
+        return array(
+            'payload'=>$this->serverActiveConfiguration,
+            'last'=>$this->serverActiveUpdateLast,
+            'lastSend'=>$this->activeSendLast,
+            'buffer'=>$this->activeChecksResultsBuffer
+        );
+    }
+
+    /**
+     * @param array $source - ['payload'] config array, ['last'] unix timestamp last check
+     */
+    public function setServerActiveConfiguration(array $source)
+    {
+        $this->serverActiveConfiguration=$source['payload'];
+        $this->serverActiveUpdateLast=$source['last'];
+        $this->activeSendLast=$source['lastSend'];
+        $this->activeChecksResultsBuffer=$source['buffer'];
+    }
+
+
+    /**
      * Create zabbix agent object
      * @param string $host
      * @param int $port
@@ -130,7 +133,7 @@ class ZabbixAgent
     function __construct($host, $port)
     {
         if(isset($port))
-        $this->setupPassive($host,$port);
+            $this->setupPassive($host,$port);
     }
 
     /**
