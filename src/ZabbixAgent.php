@@ -172,13 +172,16 @@ class ZabbixAgent
      * @param string $agentHostName
      * @param string $agentHostMetadata
      * @param int $updateInterval Active configuration update interval
+     * @param int $activeSendInterval
      */
     public function setupActive($serverActive,
                                 $port=10051,
                                 $agentHostName=null,
                                 $agentHostMetadata=null,
-                                $updateInterval=120)
+                                $updateInterval=120,
+                                $activeSendInterval=180)
     {//TODO move default values from code below to constants.
+        $this->activeSendInterval=$activeSendInterval;
         $this->serverActive=$serverActive;
         $this->serverActivePort=$port;
         $this->serverActiveUpdateInterval=$updateInterval;
