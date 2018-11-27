@@ -10,7 +10,7 @@ Forked from [wizardjedi/php-zabbix-agent](https://github.com/wizardjedi/php-zabb
 ```json
 {
    "require" : {
-        "a1s/php-zabbix-agent" : "dev-master"
+        "gogasan/php-zabbix-agent" : "dev-master"
    },
    "minimum-stability": "dev",
    "prefer-stable": true,
